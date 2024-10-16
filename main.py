@@ -17,6 +17,7 @@ screen.configure(background="light gray")
 back = PhotoImage(file="back.png")
 screen.title("Beauty Clinic")
 lbback = Label(screen, image=back).pack()
+refresh= PhotoImage(file="refresh3.png")
 
 screen.iconbitmap("up.ico")
 
@@ -215,6 +216,9 @@ def show_tomorrow_reservations():
             person["Id"], person["Full Name"], person["Phone"], person["Age"], person["Date"], person["Time"]
         ))
 
+def reload():
+    load_data()
+
 
 
 # تعریف توابع
@@ -310,6 +314,9 @@ btndate.place(x=490,y=264)
 btntommorow= Button(screen, text="Tommorow", fg="white", bg="#76312c", font=("Alegreya", 12), command=show_tomorrow_reservations)
 btntommorow.place(x=560,y=264)
 
+btnreload= Button(screen, image=refresh, command=reload)
+btnreload.place(x=630,y=15)
+
 # بارگذاری اطلاعات از MongoDB هنگام باز شدن برنامه
 load_data()
 
@@ -323,8 +330,18 @@ def search_records(event):
     search_term = ensearch.get()
     listbox.delete(0, END)  # حذف آیتم‌های قبلی
 
-    # جستجو در پایگاه داده
-    search_results = persons.find({"Full Name": {"$regex": search_term, "$options": "i"}})
+    # جستجو در پایگاه داده در ستون‌های Full Name، Phone، Age، Date، و Time
+    search_results = persons.find({
+        "$or": [
+            {"Full Name": {"$regex": search_term, "$options": "i"}},
+            {"Phone": {"$regex": search_term, "$options": "i"}},
+            {"Age": {"$regex": search_term, "$options": "i"}},
+            {"Date": {"$regex": search_term, "$options": "i"}},
+            {"Time": {"$regex": search_term, "$options": "i"}}
+        ]
+    })
+
+    # نمایش نتایج در listbox
     for result in search_results:
         listbox.insert(END, f'{result["Full Name"]} ({result["Phone"]})')
 
