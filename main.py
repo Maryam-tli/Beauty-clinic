@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from datetime import datetime, timedelta
 from pymongo import MongoClient
 
 # اتصال به MongoDB
@@ -182,6 +183,39 @@ def update_selected():
                 updated_person["Age"], updated_person["Date"], updated_person["Time"]
             ))
 
+def show_today_reservations():
+    # پاک کردن محتوای جدول
+    tbl.delete(*tbl.get_children())
+
+    # دریافت تاریخ امروز
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    # جستجو در MongoDB برای افرادی که تاریخ نوبتشان امروز است
+    today_reservations = persons.find({"Date": today})
+
+    # اضافه کردن افراد به جدول
+    for person in today_reservations:
+        tbl.insert("", "end", values=(
+            person["Id"], person["Full Name"], person["Phone"], person["Age"], person["Date"], person["Time"]
+        ))
+
+def show_tomorrow_reservations():
+    # پاک کردن محتوای جدول
+    tbl.delete(*tbl.get_children())
+
+    # دریافت تاریخ فردا
+    tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+
+    # جستجو در MongoDB برای افرادی که تاریخ نوبتشان فردا است
+    tomorrow_reservations = persons.find({"Date": tomorrow})
+
+    # اضافه کردن افراد به جدول
+    for person in tomorrow_reservations:
+        tbl.insert("", "end", values=(
+            person["Id"], person["Full Name"], person["Phone"], person["Age"], person["Date"], person["Time"]
+        ))
+
+
 
 # تعریف توابع
 def Inenname(e):
@@ -260,22 +294,29 @@ entime.bind("<FocusOut>", Outtime)
 
 # دکمه افزودن شخص
 btnadd = Button(screen, text="Create", bg="#76312c", fg="white", font=("Alegreya", 12), command=add_person)
-btnadd.place(x=270, y=260)
+btnadd.place(x=260, y=260)
 
 # دکمه حذف شخص
 btndelete = Button(screen, text="Delete", fg="white", bg="#76312c", font=("Alegreya", 12), command=delete_selected)
-btndelete.place(x=350, y=262)
+btndelete.place(x=335, y=262)
 
 # دکمه به‌روزرسانی شخص
 btnupdate = Button(screen, text="Update", fg="white", bg="#76312c", font=("Alegreya", 12), command=update_selected)
-btnupdate.place(x=425, y=263)
+btnupdate.place(x=410, y=263)
 
+btndate= Button(screen, text="Today", fg="white", bg="#76312c", font=("Alegreya", 12), command=show_today_reservations)
+btndate.place(x=490,y=264)
+
+btntommorow= Button(screen, text="Tommorow", fg="white", bg="#76312c", font=("Alegreya", 12), command=show_tomorrow_reservations)
+btntommorow.place(x=560,y=264)
 
 # بارگذاری اطلاعات از MongoDB هنگام باز شدن برنامه
 load_data()
 
 # اتصال انتخاب سطر به تابع set_to_entries
 tbl.bind("<<TreeviewSelect>>", set_to_entries)
+
+
 
 # تابع جستجو و نمایش پیشنهادات
 def search_records(event):
