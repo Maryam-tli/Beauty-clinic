@@ -18,7 +18,7 @@ back = PhotoImage(file="back.png")
 screen.title("Beauty Clinic")
 lbback = Label(screen, image=back).pack()
 refresh= PhotoImage(file="refresh3.png")
-
+close= PhotoImage(file="close1.png")
 screen.iconbitmap("up.ico")
 
 # تعریف متغیرهای ورودی
@@ -54,11 +54,13 @@ enfamily.place(x=120, y=125)
 laage = Label(screen, text="Age", bg="#063714", fg="white", font=("Alegreya", 15))
 laage.place(x=10, y=170)
 
-# تعریف ورودی Age
-enage = Entry(screen, textvariable=Age)
-enage.insert(0, "25")  # متن پیش‌فرض برای Age
-enage.config(fg="gray")
+# ایجاد لیست اعداد از 1 تا 100 برای سن
+age_values = [str(i) for i in range(1, 101)]
+
+# تعریف Combobox برای انتخاب Age
+enage = ttk.Combobox(screen, textvariable=Age, values=age_values,width=17)
 enage.place(x=120, y=170)
+
 
 ladate = Label(screen, text="Date", bg="#063714", fg="white", font=("Alegreya", 15))
 ladate.place(x=10, y=220)
@@ -245,18 +247,6 @@ def Outfamily(e):
         enfamily.insert(0, "09123456789")
         enfamily.config(fg="gray")  # تغییر رنگ متن به خاکستری
 
-
-def Inage(e):
-    if enage.get() == "25":
-        enage.delete(0, "end")
-        enage.config(fg="black")  # تغییر رنگ متن به مشکی
-
-
-def Outage(e):
-    if enage.get() == "":
-        enage.insert(0, "25")
-        enage.config(fg="gray")  # تغییر رنگ متن به خاکستری
-
 def Indate(e):
     if endate.get() == "YYYY-MM-DD":
         endate.delete(0,"end")
@@ -286,9 +276,6 @@ enname.bind("<FocusOut>", Outenname)
 
 enfamily.bind("<FocusIn>", Infamily)
 enfamily.bind("<FocusOut>", Outfamily)
-
-enage.bind("<FocusIn>", Inage)
-enage.bind("<FocusOut>", Outage)
 
 endate.bind("<FocusIn>", Indate)
 endate.bind("<FocusOut>", Outdate)
@@ -323,52 +310,59 @@ load_data()
 # اتصال انتخاب سطر به تابع set_to_entries
 tbl.bind("<<TreeviewSelect>>", set_to_entries)
 
+def frmsearch():
+    # فریم و جعبه جستجو
+    searchframe = Frame(screen, height=200, width=240, background="#054919")
+    searchframe.place(x=400, y=55)
+    Search = StringVar()
+
+    # تابع جستجو و نمایش پیشنهادات
+    def search_records(event):
+        search_term = ensearch.get()
+        listbox.delete(0, END)  # حذف آیتم‌های قبلی
+
+        # جستجو در پایگاه داده در ستون‌های Full Name، Phone، Age، Date، و Time
+        search_results = persons.find({
+            "$or": [
+                {"Full Name": {"$regex": search_term, "$options": "i"}},
+                {"Phone": {"$regex": search_term, "$options": "i"}},
+                {"Age": {"$regex": search_term, "$options": "i"}},
+                {"Date": {"$regex": search_term, "$options": "i"}},
+                {"Time": {"$regex": search_term, "$options": "i"}}
+            ]
+        })
+
+        # نمایش نتایج در listbox
+        for result in search_results:
+            listbox.insert(END, f'{result["Full Name"]} ({result["Phone"]})')
+
+    # نمایش سطر انتخاب شده از Listbox در جدول
+    def show_selected_record(event):
+        selected_value = listbox.get(listbox.curselection())
+        if selected_value:
+            selected_name = selected_value.split(" (")[0]  # گرفتن فقط نام کامل
+            tbl.delete(*tbl.get_children())  # پاک کردن جدول
+            search_result = persons.find_one({"Full Name": selected_name})
+            if search_result:
+                tbl.insert("", "end", values=(search_result["Id"], search_result["Full Name"], search_result["Phone"],
+                                              search_result["Age"], search_result["Date"], search_result["Time"]))
+
+    lasearch = Label(searchframe, text="Search", font=("Alegreya", 8))
+    lasearch.place(x=10, y=5)
+    ensearch = Entry(searchframe, textvariable=Search)
+    ensearch.place(x=64, y=6)
+    ensearch.bind("<KeyRelease>", search_records)
+
+    # لیست نتایج
+    listbox = Listbox(searchframe)
+    listbox.place(x=10, y=30, width=180, height=150)
+    listbox.bind("<<ListboxSelect>>", show_selected_record)
+    btn_close = Button(searchframe, image=close)
+    btn_close.place(x=195,y=5)
+
+btn_open= Button(screen,text="Search",command=frmsearch, fg="white", bg="#76312c", font=("Alegreya", 12))
+btn_open.place(x=20,y=15)
 
 
-# تابع جستجو و نمایش پیشنهادات
-def search_records(event):
-    search_term = ensearch.get()
-    listbox.delete(0, END)  # حذف آیتم‌های قبلی
-
-    # جستجو در پایگاه داده در ستون‌های Full Name، Phone، Age، Date، و Time
-    search_results = persons.find({
-        "$or": [
-            {"Full Name": {"$regex": search_term, "$options": "i"}},
-            {"Phone": {"$regex": search_term, "$options": "i"}},
-            {"Age": {"$regex": search_term, "$options": "i"}},
-            {"Date": {"$regex": search_term, "$options": "i"}},
-            {"Time": {"$regex": search_term, "$options": "i"}}
-        ]
-    })
-
-    # نمایش نتایج در listbox
-    for result in search_results:
-        listbox.insert(END, f'{result["Full Name"]} ({result["Phone"]})')
-
-# نمایش سطر انتخاب شده از Listbox در جدول
-def show_selected_record(event):
-    selected_value = listbox.get(listbox.curselection())
-    if selected_value:
-        selected_name = selected_value.split(" (")[0]  # گرفتن فقط نام کامل
-        tbl.delete(*tbl.get_children())  # پاک کردن جدول
-        search_result = persons.find_one({"Full Name": selected_name})
-        if search_result:
-            tbl.insert("", "end", values=(search_result["Id"], search_result["Full Name"], search_result["Phone"],
-                                          search_result["Age"], search_result["Date"], search_result["Time"]))
-
-# فریم و جعبه جستجو
-searchframe = Frame(screen, height=200, width=200, background="#054919")
-searchframe.place(x=400, y=55)
-Search = StringVar()
-lasearch = Label(searchframe, text="Search", font=("Alegreya", 8))
-lasearch.place(x=10, y=5)
-ensearch = Entry(searchframe, textvariable=Search)
-ensearch.place(x=64, y=6)
-ensearch.bind("<KeyRelease>", search_records)
-
-# لیست نتایج
-listbox = Listbox(searchframe)
-listbox.place(x=10, y=30, width=180, height=150)
-listbox.bind("<<ListboxSelect>>", show_selected_record)
 
 screen.mainloop()
