@@ -12,6 +12,7 @@ persons = db["persons"]
 screen = Tk()
 screen.geometry("700x600+10+10")
 screen.configure(background="light gray")
+screen.resizable(False, False)
 
 # بارگذاری تصویر پس‌زمینه
 back = PhotoImage(file="back.png")
@@ -313,7 +314,7 @@ tbl.bind("<<TreeviewSelect>>", set_to_entries)
 def frmsearch():
     # فریم و جعبه جستجو
     searchframe = Frame(screen, height=200, width=240, background="#054919")
-    searchframe.place(x=400, y=55)
+    searchframe.place(x=350, y=55)
     Search = StringVar()
 
     # تابع جستجو و نمایش پیشنهادات
@@ -346,6 +347,8 @@ def frmsearch():
             if search_result:
                 tbl.insert("", "end", values=(search_result["Id"], search_result["Full Name"], search_result["Phone"],
                                               search_result["Age"], search_result["Date"], search_result["Time"]))
+    def close_frame():
+        searchframe.place_forget()
 
     lasearch = Label(searchframe, text="Search", font=("Alegreya", 8))
     lasearch.place(x=10, y=5)
@@ -357,7 +360,7 @@ def frmsearch():
     listbox = Listbox(searchframe)
     listbox.place(x=10, y=30, width=180, height=150)
     listbox.bind("<<ListboxSelect>>", show_selected_record)
-    btn_close = Button(searchframe, image=close)
+    btn_close = Button(searchframe, image=close, command=close_frame)
     btn_close.place(x=195,y=5)
 
 btn_open= Button(screen,text="Search",command=frmsearch, fg="white", bg="#76312c", font=("Alegreya", 12))
