@@ -350,6 +350,8 @@ def frmsearch():
     def close_frame():
         searchframe.place_forget()
 
+
+
     lasearch = Label(searchframe, text="Search", font=("Alegreya", 8))
     lasearch.place(x=10, y=5)
     ensearch = Entry(searchframe, textvariable=Search)
